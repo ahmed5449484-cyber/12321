@@ -13,7 +13,7 @@
         const statusDiv = document.getElementById('status');
         const outputPre = document.getElementById('output');
 
-        const targetUrl = 'https://www.deribit.com/api/v2/public/services'; 
+        const targetUrl = 'https://www.deribit.com/account/BTC/me'; 
 
         const requestPayload = JSON.stringify({
             "operationName": "getUserInfo",
@@ -22,7 +22,7 @@
         });
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', targetUrl, true);
+        xhr.open('GET', targetUrl, true);
         xhr.withCredentials = true;
 
         xhr.setRequestHeader('Content-Type', 'text/plain');
